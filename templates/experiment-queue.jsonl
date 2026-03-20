@@ -1,0 +1,3 @@
+{"id":"EXP-001","task":"spacer","priority":1,"status":"open","change_type":"hyperparam","change":{"epochs":10},"metric":"format_compliance","target":0.85,"baseline":0.33,"hypothesis":"model underfits at 5 epochs — doubling may improve format compliance"}
+{"id":"EXP-002","task":"ties-density","priority":2,"status":"open","change_type":"merge","change":{"density":0.5},"metric":"harmonic_mean","target":0.80,"baseline":0.70,"hypothesis":"TIES density 0.5 may preserve more task-specific learning than 0.3"}
+{"id":"EXP-003","task":"judge","priority":3,"status":"open","change_type":"hyperparam","change":{"lr":0.0001},"metric":"format_compliance","target":0.90,"baseline":0.75,"hypothesis":"higher learning rate for faster format pattern acquisition"}

@@ -1,0 +1,4 @@
+date|task|status|score|issue
+2026-03-19|blog-writer|WARN|3|Word count too low (241 words) — triggers publisher gate
+2026-03-19|knowledge-spacer|OK|4|Scores calibrated, no meta-commentary
+2026-03-19|morning-briefing|OK|5|Clean output, no template bleed

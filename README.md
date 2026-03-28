@@ -6,13 +6,29 @@
 
 ClaudeSearch is an autonomous improvement system for software projects. It treats your workspace like a model to be trained: quality scores are the loss function, improvement cycles are training steps. It finds bottlenecks, root-causes them, applies fixes, measures impact, and iterates — entirely autonomously, overnight, while you're focused on something else.
 
-Built and battle-tested in a single session:
+Built and battle-tested over weeks of continuous operation:
 
-- **102 improvements** found and applied autonomously
-- **29 project code fixes** across 3 active codebases
-- **Blog pipeline restored** after 9 days silently broken
-- **Knowledge engine unblocked** (was losing 85% of input due to a single config mistake)
-- **Overnight self-healing loop** that runs continuously and routes issues to the right model
+- **6,000+ knowledge notes** generated autonomously (local MoE at 149 tok/s)
+- **19+ code improvements** applied with quality gate (SEO fixes, GPU config, model routing)
+- **5 production feature specs** generated for a live SaaS app from knowledge notes
+- **12 self-improvements** — the system debugged and optimized itself across 2 rounds
+- **Dual-instance architecture**: local GPU builds the knowledge library (free), Claude Sonnet reads notes and implements real changes
+- **Blog pipeline, learning engine, heartbeat system** all maintained autonomously
+
+### v4 Architecture (current)
+
+```
+Instance B (MoE 35B, local GPU, free)       Instance A (Claude Sonnet, API)
+├─ Research → Knowledge notes                ├─ Connect → Read note + target code
+├─ Synthesize → Cross-domain connections     │   └─ Quality gate: score 1-5, act on 4+
+└─ 510 cycles/hour via Vulkan llama-server   ├─ Act → Implement, verify, log
+                                             ├─ Suggest → Protected project proposals
+                                             └─ ~6 cycles/hour, actual code changes
+```
+
+Key discovery: `--reasoning off` in llama.cpp prevents the model from routing all output to `reasoning_content` (empty `content` field), unlocking 3x speed (48→149 tok/s) and eliminating thinking token waste.
+
+The original v3 system (below) created 461 synthesis notes but zero code changes. v4 closed the loop.
 
 ---
 

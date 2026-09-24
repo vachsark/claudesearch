@@ -5,7 +5,7 @@ ClaudeSearch is CLI-agnostic. The diagnose → fix → verify cycle works with a
 ## Setup
 
 1. Copy the contents of `.claude/skills/autoresearch/SKILL.md` into a `GEMINI.md` file at your project root (Gemini CLI loads `GEMINI.md` by default, not `AGENTS.md`; to use `AGENTS.md` instead, set `"context": {"fileName": ["AGENTS.md", "GEMINI.md"]}` in `.gemini/settings.json`)
-2. Create a `quality-scores.tsv` file to track metrics
+2. Run `install.sh` (or create `.claudesearch/quality-scores.tsv` yourself) to track metrics — pipe-delimited `date|task|status|score|issue`, scores 1-5
 3. Run improvement cycles through Gemini's task system
 
 ## How It Maps
@@ -23,7 +23,7 @@ With the protocol in `GEMINI.md`, start `gemini` in your project and prompt (or,
 
 ```
 Run one ClaudeSearch improvement cycle on this project.
-Read quality-scores.tsv for the current state, find the worst-performing area,
+Read .claudesearch/quality-scores.tsv for the current state, find the worst-performing area,
 diagnose the root cause, fix it, verify, and log the result.
 ```
 

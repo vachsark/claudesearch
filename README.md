@@ -185,7 +185,7 @@ Andrej Karpathy wrote about [autoresearch](https://github.com/karpathy/autoresea
 ```
 Neural network training:        ClaudeSearch:
   weights     ←→  configs, scripts, prompts
-  loss        ←→  quality scores (0-10 per task)
+  loss        ←→  quality scores (1-5 per task)
   gradient    ←→  root-cause analysis
   update      ←→  fix + verify
   epoch       ←→  improvement cycle
@@ -193,7 +193,7 @@ Neural network training:        ClaudeSearch:
 
 The insight is that your project's infrastructure — its automation scripts, agent prompts, deployment pipelines, build configs — is itself a kind of model. It has parameters (the scripts and configs), it has measurable performance (quality scores, success rates, task completions), and it can be improved systematically.
 
-When a task scores 6/10 three runs in a row, that's a signal. ClaudeSearch investigates it, finds the root cause (stale data? broken pipeline? wrong model?), applies a fix, and watches whether the score climbs. If it doesn't, it digs deeper. This is exactly the loop that makes neural network training work — applied to the unglamorous but critical layer underneath your code.
+When a task scores 2/5 three runs in a row, that's a signal. ClaudeSearch investigates it, finds the root cause (stale data? broken pipeline? wrong model?), applies a fix, and watches whether the score climbs. If it doesn't, it digs deeper. This is exactly the loop that makes neural network training work — applied to the unglamorous but critical layer underneath your code.
 
 ### Why This Matters
 
@@ -269,35 +269,37 @@ ClaudeSearch isn't limited to one type of problem. It operates across:
 
 ### Quality Scoring
 
-Every automated task in ClaudeSearch gets a quality score after each run (0-10). Scores are logged to `quality-scores.tsv`:
+Every automated task in ClaudeSearch gets a quality score after each run, on a 1-5 scale (5 = clean output, 3 = usable with issues, 1 = broken). Scores are logged to `.claudesearch/quality-scores.tsv` — pipe-delimited, one row per run, same format as `templates/quality-scores.tsv`:
 
-```tsv
-timestamp          task                    score  model           notes
-2026-03-19T02:00   blog-writer             3      qwen2.5-coder   filler text, no structure
-2026-03-19T02:00   knowledge-analyst       7      llama3.1:8b     partial data only
-2026-03-19T02:00   research-session        9      claude-sonnet   strong synthesis
+```
+date|task|status|score|issue
+2026-03-19|blog-writer|WARN|3|Word count too low (241 words) — triggers publisher gate
+2026-03-19|knowledge-analyst|FAIL|2|Reports "insufficient data" — query window too narrow
+2026-03-19|morning-briefing|OK|5|Clean output, no template bleed
 ```
 
-The triage script flags tasks where the rolling average drops below threshold (default: 7.0) for 3+ consecutive runs. This filters out one-off noise and targets persistent problems.
+`status` is `OK` (4-5), `WARN` (3) or `FAIL` (1-2). Triage flags tasks whose rolling average stays below 3.5 for 3+ consecutive runs. This filters out one-off noise and targets persistent problems.
 
 ### The Experiment Queue
 
 For problems that require exploration (e.g., "which model is best for this task?"), ClaudeSearch maintains an experiment queue:
 
-```jsonl
+```json
 {
-  "id": "e001",
-  "hypothesis": "gemma3:12b writes better prose than qwen2.5-coder for blog posts",
+  "id": "EXP-001",
   "task": "blog-writer",
-  "variable": "model",
-  "values": [
-    "gemma3:12b",
-    "qwen2.5-coder:14b"
-  ],
+  "priority": 1,
+  "status": "open",
+  "change_type": "model",
+  "change": { "model": "gemma3:12b" },
   "metric": "quality_score",
-  "status": "pending"
+  "target": 4,
+  "baseline": 3,
+  "hypothesis": "gemma3:12b writes better prose than qwen2.5-coder for blog posts"
 }
 ```
+
+Each experiment is one line in `.claudesearch/experiment-queue.jsonl` (see `templates/experiment-queue.jsonl`). `status` moves from `open` to `done` or `rejected`.
 
 The experiment runner works through the queue, runs each hypothesis, records results, and promotes winners to the active config. This is how model routing decisions get made empirically rather than by guess.
 
@@ -361,11 +363,12 @@ The core loop — diagnose → fix → verify — works with any AI CLI that can
 
 ```
 You are a self-improving infrastructure agent. Your job:
-1. Read quality-scores.tsv. Find tasks with rolling average < 7.0 for 3+ runs.
+1. Read .claudesearch/quality-scores.tsv (pipe-delimited: date|task|status|score|issue, scores 1-5).
+   Find tasks with rolling average < 3.5 for 3+ runs.
 2. For each failing task: read its config, trace its pipeline, find the root cause.
 3. Apply the minimal fix that addresses the root cause.
 4. Run the task once to verify the score improved.
-5. Log what you found and fixed to prompt-results.jsonl.
+5. Log what you found and fixed to .claudesearch/prompt-results.jsonl.
 Repeat until no tasks are below threshold or you've made 20 fixes.
 ```
 
@@ -514,7 +517,7 @@ See `skills/model-routing.md` for the full decision tree.
 
 ## Real Examples
 
-These are verbatim findings from a single session. No cherry-picking — these were the first things the system found.
+These are verbatim findings from a single session. No cherry-picking — these were the first things the system found. (These runs predate the 1-5 scale, so their scores are on the original 0-10 scale.)
 
 ### Example 1: The Silent Copy Bug
 
@@ -572,7 +575,7 @@ Scans quality scores and reports failing tasks.
 
 ```bash
 bash scripts/quality-triage.sh                  # report failing tasks
-bash scripts/quality-triage.sh --threshold 6.5  # custom threshold
+bash scripts/quality-triage.sh --threshold 3.0  # custom threshold
 bash scripts/quality-triage.sh --window 5       # use 5-run rolling average
 bash scripts/quality-triage.sh --json           # machine-readable output
 ```
@@ -631,6 +634,8 @@ Quick reference:
 ---
 
 ## Contributing
+
+Run `bash tests/smoke-test.sh` (and `shellcheck install.sh`) before opening a PR — CI runs both.
 
 ### Adding Failure Patterns
 

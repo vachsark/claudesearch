@@ -4,7 +4,7 @@ ClaudeSearch works with any AI CLI that has file read/write/search capabilities.
 
 ## Setup
 
-1. Copy `skills/autoresearch.md` into your Codex agent configuration
+1. Copy the contents of `.claude/skills/autoresearch/SKILL.md` into an `AGENTS.md` file at your project root (Codex reads `AGENTS.md` from the repo root down to the working directory, plus the global `~/.codex/AGENTS.md` — it does not read `.codex/AGENTS.md` inside a project)
 2. Create a `quality-scores.tsv` file to track metrics
 3. Run the autoresearch cycle when you want to improve your project
 
@@ -12,7 +12,7 @@ ClaudeSearch works with any AI CLI that has file read/write/search capabilities.
 
 | ClaudeSearch Concept  | Codex Equivalent                            |
 | --------------------- | ------------------------------------------- |
-| `/autoresearch` skill | Agent with autoresearch.md as system prompt |
+| `/autoresearch` skill | Autoresearch protocol in `AGENTS.md`        |
 | Background Agent      | Codex async task                            |
 | `Read` tool           | File read capability                        |
 | `Edit` tool           | File edit capability                        |
@@ -22,7 +22,11 @@ ClaudeSearch works with any AI CLI that has file read/write/search capabilities.
 ## Running a Cycle
 
 ```bash
-codex --agent autoresearch "Run one improvement cycle on this project"
+# Interactive
+codex "Run one ClaudeSearch improvement cycle on this project"
+
+# Non-interactive (workspace-write lets it apply fixes)
+codex exec --sandbox workspace-write "Run one ClaudeSearch improvement cycle on this project"
 ```
 
 The agent will follow the same diagnose → root-cause → fix → verify → log protocol.

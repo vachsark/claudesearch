@@ -4,7 +4,7 @@ ClaudeSearch is CLI-agnostic. The diagnose → fix → verify cycle works with a
 
 ## Setup
 
-1. Copy `skills/autoresearch.md` into your Gemini agent/prompt configuration
+1. Copy the contents of `.claude/skills/autoresearch/SKILL.md` into a `GEMINI.md` file at your project root (Gemini CLI loads `GEMINI.md` by default, not `AGENTS.md`; to use `AGENTS.md` instead, set `"context": {"fileName": ["AGENTS.md", "GEMINI.md"]}` in `.gemini/settings.json`)
 2. Create a `quality-scores.tsv` file to track metrics
 3. Run improvement cycles through Gemini's task system
 
@@ -12,14 +12,14 @@ ClaudeSearch is CLI-agnostic. The diagnose → fix → verify cycle works with a
 
 | ClaudeSearch Concept  | Gemini Equivalent                          |
 | --------------------- | ------------------------------------------ |
-| `/autoresearch` skill | System prompt with autoresearch.md content |
+| `/autoresearch` skill | Autoresearch protocol in `GEMINI.md`       |
 | Background Agent      | Gemini async task                          |
 | Quality scores        | Same TSV format — CLI-agnostic             |
 | Improvement log       | Same JSONL format — CLI-agnostic           |
 
 ## Running a Cycle
 
-Load the autoresearch skill content as a system prompt, then:
+With the protocol in `GEMINI.md`, start `gemini` in your project and prompt (or, for headless mode, `gemini --approval-mode auto_edit -p "..."` so edits are auto-approved):
 
 ```
 Run one ClaudeSearch improvement cycle on this project.

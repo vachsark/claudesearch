@@ -317,7 +317,7 @@ Full native support. All features work.
 
 ```bash
 # Install
-git clone https://github.com/your-org/claudesearch
+git clone https://github.com/vachsark/claudesearch
 cd your-project
 bash /path/to/claudesearch/install.sh
 
@@ -329,29 +329,31 @@ The skill lives in `.claude/skills/autoresearch/SKILL.md`. Claude Code auto-disc
 
 ### OpenAI Codex CLI
 
-Codex CLI uses `AGENTS.md` files for agent instructions. The equivalent is in `.codex/AGENTS.md`. The core logic is identical — the prompting format differs slightly.
+Codex CLI reads `AGENTS.md` from your project root (and the global `~/.codex/AGENTS.md`); it does not read `.codex/AGENTS.md` inside a project. Put the autoresearch protocol there — the core logic is identical.
 
 ```bash
-# Install Codex equivalent
-cp claudesearch/.codex/AGENTS.md your-project/.codex/AGENTS.md
+# Install: add the protocol to your project's AGENTS.md
+cat claudesearch/.claude/skills/autoresearch/SKILL.md >> your-project/AGENTS.md
 
 # Run (Codex CLI syntax)
-codex "run autoresearch cycle on this project"
+codex "run one ClaudeSearch improvement cycle on this project"
 ```
 
-See `docs/cli-compatibility.md` for the full Codex setup guide.
+See `.codex/AGENTS.md` for the full Codex setup guide.
 
 ### Gemini CLI
 
-Gemini CLI uses `.gemini/AGENTS.md`. The equivalent is included.
+Gemini CLI loads `GEMINI.md` from your project root by default (not `.gemini/AGENTS.md`). Put the autoresearch protocol there.
 
 ```bash
-# Install Gemini equivalent
-cp claudesearch/.gemini/AGENTS.md your-project/.gemini/AGENTS.md
+# Install: add the protocol to your project's GEMINI.md
+cat claudesearch/.claude/skills/autoresearch/SKILL.md >> your-project/GEMINI.md
 
 # Run (Gemini CLI syntax)
-gemini "run an autoresearch improvement cycle"
+gemini "run one ClaudeSearch improvement cycle on this project"
 ```
+
+See `.gemini/AGENTS.md` for the full Gemini setup guide.
 
 ### Any CLI with Tool Access
 
@@ -378,7 +380,7 @@ You just need two things: the skill file and a quality tracking mechanism.
 **Step 1**: Clone and copy the skill
 
 ```bash
-git clone https://github.com/your-org/claudesearch
+git clone https://github.com/vachsark/claudesearch
 mkdir -p your-project/.claude/skills/autoresearch
 cp claudesearch/.claude/skills/autoresearch/SKILL.md your-project/.claude/skills/autoresearch/
 ```
@@ -386,8 +388,8 @@ cp claudesearch/.claude/skills/autoresearch/SKILL.md your-project/.claude/skills
 **Step 2**: Create a quality scores file
 
 ```bash
-mkdir -p your-project/_tracking
-cp claudesearch/templates/quality-scores.tsv your-project/_tracking/
+mkdir -p your-project/.claudesearch
+cp claudesearch/templates/quality-scores.tsv your-project/.claudesearch/
 ```
 
 Edit `quality-scores.tsv` to add your actual automated tasks and their recent scores. Even 3-4 scores per task is enough to start.
@@ -401,23 +403,18 @@ claude   # then: /autoresearch
 
 The skill will scan your quality scores, find the worst-performing task, diagnose it, and propose a fix. On the first run, just watch — understand what it finds before letting it auto-apply.
 
-### Full Setup (30 minutes)
-
-The full setup adds the heartbeat system (scheduled runs), experiment queue, and self-healing loop.
+### Install Script
 
 ```bash
-cd your-project
-bash /path/to/claudesearch/install.sh --full
+bash /path/to/claudesearch/install.sh your-project
 ```
 
-The install script will:
+The install script takes an optional project directory (default: current directory) and will:
 
-1. Copy all skill files
-2. Create tracking directories and template files
-3. Set up a systemd timer (Linux) or launchd job (macOS) for scheduled runs
-4. Run an initial quality scan to baseline your project
+1. Create `.claudesearch/` with `quality-scores.tsv` and `prompt-results.jsonl`
+2. If Claude Code is detected, copy the skill to `.claude/skills/autoresearch/SKILL.md`
 
-See `docs/getting-started.md` for the full walkthrough.
+Scheduled runs (heartbeat), the experiment queue, and the self-healing loop are not set up by the script — see the sections below for how they work.
 
 ### What to Track
 
@@ -447,7 +444,7 @@ your-project/
 │   └── AGENTS.md                 # Codex CLI equivalent
 ├── .gemini/
 │   └── AGENTS.md                 # Gemini CLI equivalent
-└── _tracking/                    # Created by install.sh
+└── .claudesearch/                # Created by install.sh (first two files)
     ├── quality-scores.tsv        # Per-task quality history
     ├── prompt-results.jsonl      # Improvement log
     ├── experiment-queue.jsonl    # Pending experiments

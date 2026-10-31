@@ -5,7 +5,7 @@ ClaudeSearch works with any AI CLI that has file read/write/search capabilities.
 ## Setup
 
 1. Copy the contents of `.claude/skills/autoresearch/SKILL.md` into an `AGENTS.md` file at your project root (Codex reads `AGENTS.md` from the repo root down to the working directory, plus the global `~/.codex/AGENTS.md` — it does not read `.codex/AGENTS.md` inside a project)
-2. Create a `quality-scores.tsv` file to track metrics
+2. Run `install.sh` (or create `.claudesearch/quality-scores.tsv` yourself) to track metrics — pipe-delimited `date|task|status|score|issue`, scores 1-5
 3. Run the autoresearch cycle when you want to improve your project
 
 ## How It Maps

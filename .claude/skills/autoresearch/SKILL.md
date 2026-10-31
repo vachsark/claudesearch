@@ -23,22 +23,28 @@ ClaudeSearch keeps its state in `.claudesearch/` at the project root (created by
 
 - `.claudesearch/quality-scores.tsv` — one row per task run, pipe-delimited: `date|task|status|score|issue`. Scores are 1-5 (5 = clean, 3 = usable with issues, 1 = broken); status is `OK` (4-5), `WARN` (3) or `FAIL` (1-2).
 - `.claudesearch/prompt-results.jsonl` — improvement log, one JSON object per line (format in Step 5).
-- `.claudesearch/experiment-queue.jsonl` — optional queue of experiments to try.
+- `.claudesearch/experiment-queue.jsonl` — optional queue of experiments to try. If it exists, run the oldest pending entry that targets the task you picked in Step 1.
+- `.claudesearch/backups/` — copies of files taken before each edit (Step 3).
+- `.claudesearch/reports/` — one report per cycle (Step 6).
 
 If `.claudesearch/` doesn't exist, look for these files elsewhere in the project before falling back to tests/lint/logs alone.
 
 ## One Cycle Protocol
+
+### Step 0: Find the project's checks
+
+Before diagnosing, find how this project tests itself: look in the README, `Makefile`, `package.json` scripts, `pyproject.toml` and `tests/`. Note the command; Steps 1 and 4 use it. If there is none, use lint, type checks and the failing command itself.
 
 ### Step 1: Diagnose
 
 Find the biggest bottleneck. Check:
 
 - Test failures, lint errors, type errors
-- Quality scores (`.claudesearch/quality-scores.tsv`) — tasks whose last 3 scores average below 3.5
+- Quality scores (`.claudesearch/quality-scores.tsv`) — tasks whose 3 most recent scores, by date, average below 3.5
 - Recent error logs
 - Previously logged improvements (`.claudesearch/prompt-results.jsonl`) — don't repeat a fix that already failed
 
-Pick the issue with the **lowest quality score** or **highest error frequency**.
+Pick the task with the **lowest recent average score**. Use error frequency only to break a tie, or when the project has no quality scores.
 
 ### Step 2: Root-cause
 
@@ -49,13 +55,13 @@ Read the failing component's code, config, or prompt. Identify: Is it a config i
 Make ONE targeted change. Rules:
 
 - ONE change per cycle — surgical edits only
-- Back up before editing
+- Back up before editing: copy the file to `.claudesearch/backups/<file name>.<YYYY-MM-DDTHHMM>.bak`. Keep backups inside `.claudesearch/`, never next to the original, where globs could pick them up
 - For scripts: syntax check after editing
 - For code: type check after editing
 
 ### Step 4: Verify
 
-Test the fix immediately if possible. Run tests, lint, type check, or the specific command that was failing.
+Test the fix immediately if possible. Run the check from Step 0, lint, type check, or the specific command that was failing. If the check appends rows to `quality-scores.tsv`, that's expected: the new row is the score after your fix, and Step 1 of the next cycle reads it.
 
 ### Step 5: Log
 
@@ -67,12 +73,20 @@ Append one line to `.claudesearch/prompt-results.jsonl` (shown expanded here; wr
   "action": "applied",
   "edit": "what changed",
   "timestamp": "ISO",
-  "root_cause": "type",
+  "root_cause": "config_mismatch",
+  "score_before": 2,
+  "score_after": 5,
   "expected_impact": "description"
 }
 ```
 
+- `action`: `applied` (fix kept), `reverted` (fix didn't help and the backup was restored) or `flagged` (stopped; see "When to stop" below, and put the flag in `edit`).
+- `root_cause`: a pattern name from the table below in snake_case (`config_mismatch`, `wrong_tool_model`, `context_overflow`, `template_bleed`, `missing_validation`, `stale_reference`), or `other`.
+- `score_before` / `score_after`: the task's score before the fix and on the verify run; `null` if there is no score.
+
 ### Step 6: Report
+
+Print this, and save the same text to `.claudesearch/reports/<YYYY-MM-DD>-<task>.md`:
 
 ```
 BOTTLENECK: {component} — {root cause}
@@ -86,7 +100,7 @@ NEXT: {how to verify tomorrow}
 
 1. Fix it
 2. Verify the fix
-3. If it didn't work → try a different approach
+3. If it didn't work → restore the backup, log the attempt as `reverted`, then try a different approach. Each attempt is still one change.
 4. Keep iterating until the metric improves
 
 **When to stop and flag instead:**

@@ -335,13 +335,14 @@ Codex CLI reads `AGENTS.md` from your project root (and the global `~/.codex/AGE
 
 ```bash
 # Install: add the protocol to your project's AGENTS.md
-cat claudesearch/.claude/skills/autoresearch/SKILL.md >> your-project/AGENTS.md
+# (the awk skips SKILL.md's YAML frontmatter, which only Claude Code uses)
+awk 'f; /^---$/ && ++n==2 {f=1}' claudesearch/.claude/skills/autoresearch/SKILL.md >> your-project/AGENTS.md
 
 # Run (Codex CLI syntax)
 codex "run one ClaudeSearch improvement cycle on this project"
 ```
 
-See `.codex/AGENTS.md` for the full Codex setup guide.
+See `.codex/AGENTS.md` in this repo for Codex setup notes. Codex itself doesn't read that file; it reads `AGENTS.md` at your project root.
 
 ### Gemini CLI
 
@@ -349,13 +350,14 @@ Gemini CLI loads `GEMINI.md` from your project root by default (not `.gemini/AGE
 
 ```bash
 # Install: add the protocol to your project's GEMINI.md
-cat claudesearch/.claude/skills/autoresearch/SKILL.md >> your-project/GEMINI.md
+# (the awk skips SKILL.md's YAML frontmatter, which only Claude Code uses)
+awk 'f; /^---$/ && ++n==2 {f=1}' claudesearch/.claude/skills/autoresearch/SKILL.md >> your-project/GEMINI.md
 
 # Run (Gemini CLI syntax)
 gemini "run one ClaudeSearch improvement cycle on this project"
 ```
 
-See `.gemini/AGENTS.md` for the full Gemini setup guide.
+See `.gemini/AGENTS.md` in this repo for Gemini setup notes. Gemini CLI itself doesn't read that file; it reads `GEMINI.md` at your project root.
 
 ### Any CLI with Tool Access
 
@@ -444,9 +446,9 @@ your-project/
 │       └── autoresearch/
 │           └── SKILL.md          # Core skill (Claude Code)
 ├── .codex/
-│   └── AGENTS.md                 # Codex CLI equivalent
+│   └── AGENTS.md                 # Codex setup notes (Codex reads ./AGENTS.md)
 ├── .gemini/
-│   └── AGENTS.md                 # Gemini CLI equivalent
+│   └── AGENTS.md                 # Gemini setup notes (Gemini reads ./GEMINI.md)
 └── .claudesearch/                # Created by install.sh (first two files)
     ├── quality-scores.tsv        # Per-task quality history
     ├── prompt-results.jsonl      # Improvement log
@@ -568,6 +570,8 @@ The fix took 2 minutes. The task had been broken for weeks.
 ---
 
 ## Scripts Reference
+
+> These scripts come from the author's own setup and aren't shipped in this repo yet. The commands below document their interface.
 
 ### `quality-triage.sh`
 

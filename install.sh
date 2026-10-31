@@ -31,6 +31,7 @@ fi
 # Create directory structure
 mkdir -p "$PROJECT_ROOT/.claudesearch"
 mkdir -p "$PROJECT_ROOT/.claudesearch/reports"
+mkdir -p "$PROJECT_ROOT/.claudesearch/backups"
 
 # Create tracking files
 if [[ ! -f "$PROJECT_ROOT/.claudesearch/quality-scores.tsv" ]]; then

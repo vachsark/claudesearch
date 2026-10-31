@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # run.sh <label> [skill-file]: fresh copy of the fixture, install skill, seed, run one headless cycle, grade.
 B="$(cd "$(dirname "$0")" && pwd)"; SKILL="${2:-$B/../.claude/skills/autoresearch/SKILL.md}"; W="$B/runs/$1"; rm -rf "$W"; mkdir -p "$B/runs"; cp -r "$B/fixture" "$W"; cd "$W"
-mkdir -p .claude/skills/autoresearch .claudesearch/reports .claudesearch/backups
+mkdir -p out .claude/skills/autoresearch .claudesearch/reports .claudesearch/backups
 cp "$SKILL" .claude/skills/autoresearch/SKILL.md
 echo "date|task|status|score|issue" > .claudesearch/quality-scores.tsv
 cat >> .claudesearch/quality-scores.tsv <<'R'

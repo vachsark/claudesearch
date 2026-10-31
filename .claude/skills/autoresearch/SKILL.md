@@ -23,7 +23,7 @@ ClaudeSearch keeps its state in `.claudesearch/` at the project root (created by
 
 - `.claudesearch/quality-scores.tsv` — one row per task run, pipe-delimited: `date|task|status|score|issue`. Scores are 1-5 (5 = clean, 3 = usable with issues, 1 = broken); status is `OK` (4-5), `WARN` (3) or `FAIL` (1-2).
 - `.claudesearch/prompt-results.jsonl` — improvement log, one JSON object per line (format in Step 5).
-- `.claudesearch/experiment-queue.jsonl` — optional queue of experiments to try. If it exists, run the oldest pending entry that targets the task you picked in Step 1.
+- `.claudesearch/experiment-queue.jsonl` — optional queue of experiments to try. If it exists, run the open entry (`"status": "open"`) for the task you picked in Step 1 with the lowest `priority` (ties: the one earlier in the file). At the Step 5 log for that experiment, set its status to `done` if the fix was kept, `rejected` if it was reverted, or `flagged` if you stopped and flagged it, so later cycles don't pick it again.
 - `.claudesearch/backups/` — copies of files taken before each edit (Step 3).
 - `.claudesearch/reports/` — one report per cycle (Step 6).
 
@@ -40,7 +40,7 @@ Before diagnosing, find how this project tests itself: look in the README, `Make
 Find the biggest bottleneck. Check:
 
 - Test failures, lint errors, type errors
-- Quality scores (`.claudesearch/quality-scores.tsv`) — tasks whose 3 most recent scores, by date, average below 3.5
+- Quality scores (`.claudesearch/quality-scores.tsv`) — tasks whose 3 most recent scores average below 3.5 (most recent by date; on the same date, a row further down the file is newer)
 - Recent error logs
 - Previously logged improvements (`.claudesearch/prompt-results.jsonl`) — don't repeat a fix that already failed
 
@@ -55,7 +55,7 @@ Read the failing component's code, config, or prompt. Identify: Is it a config i
 Make ONE targeted change. Rules:
 
 - ONE change per cycle — surgical edits only
-- Back up before editing: copy the file to `.claudesearch/backups/<file name>.<YYYY-MM-DDTHHMM>.bak`. Keep backups inside `.claudesearch/`, never next to the original, where globs could pick them up
+- Back up before editing: copy the file to `.claudesearch/backups/<path from the project root, with / replaced by __>.<YYYY-MM-DDTHHMMSS>.bak` (for example `tasks__digest.sh.2026-10-31T183005.bak`). Never overwrite an existing backup: if the name is taken, add `-2`, `-3`, ... before `.bak`. Keep backups inside `.claudesearch/`, never next to the original, where globs could pick them up
 - For scripts: syntax check after editing
 - For code: type check after editing
 
@@ -86,7 +86,7 @@ Append one line to `.claudesearch/prompt-results.jsonl` (shown expanded here; wr
 
 ### Step 6: Report
 
-Print this, and save the same text to `.claudesearch/reports/<YYYY-MM-DD>-<task>.md`:
+Print this, and save the same text to `.claudesearch/reports/<YYYY-MM-DDTHHMMSS>-<task>.md` (never overwrite an existing report: if the name is taken, add `-2`, `-3`, ... before `.md`):
 
 ```
 BOTTLENECK: {component} — {root cause}

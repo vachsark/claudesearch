@@ -30,11 +30,19 @@ cmp -s "$REPO_DIR/.claude/skills/autoresearch/SKILL.md" \
     "$WORK/claude-proj/.claude/skills/autoresearch/SKILL.md" || fail "SKILL.md not installed"
 [[ "$(head -1 "$WORK/claude-proj/.claudesearch/quality-scores.tsv")" == "date|task|status|score|issue" ]] \
     || fail "quality-scores.tsv header wrong"
+cmp -s "$REPO_DIR/templates/experiment-queue.jsonl" \
+    "$WORK/claude-proj/.claudesearch/experiment-queue.jsonl" || fail "experiment queue not installed"
+grep -Fxq "Docs: $REPO_DIR/README.md" "$WORK/out1" || fail "docs path is not absolute"
+grep -Fxq "Philosophy: $REPO_DIR/docs/philosophy.md" "$WORK/out1" || fail "philosophy path is not absolute"
 pass "install with Claude Code"
 
 # 2. Re-running does not clobber existing tracking data
 echo "2026-01-01|t|OK|5|x" >> "$WORK/claude-proj/.claudesearch/quality-scores.tsv"
+printf '%s\n' '{"task":"existing","status":"pending","note":"keep these bytes"}' > "$WORK/claude-proj/.claudesearch/experiment-queue.jsonl"
+cp "$WORK/claude-proj/.claudesearch/experiment-queue.jsonl" "$WORK/queue-before"
 PATH="$FAKE_BIN:$BASE_BIN" bash "$REPO_DIR/install.sh" "$WORK/claude-proj" > /dev/null
+cmp -s "$WORK/queue-before" "$WORK/claude-proj/.claudesearch/experiment-queue.jsonl" \
+    || fail "re-install overwrote nonempty experiment queue"
 grep -q '^2026-01-01|t|OK|5|x$' "$WORK/claude-proj/.claudesearch/quality-scores.tsv" \
     || fail "re-install overwrote quality-scores.tsv"
 pass "re-install keeps existing data"
@@ -42,6 +50,7 @@ pass "re-install keeps existing data"
 # 3. No supported CLI detected
 PATH="$BASE_BIN" bash "$REPO_DIR/install.sh" "$WORK/plain-proj" > "$WORK/out3"
 [[ -f "$WORK/plain-proj/.claudesearch/quality-scores.tsv" ]] || fail "tracking files missing without CLI"
+[[ -f "$WORK/plain-proj/.claudesearch/experiment-queue.jsonl" ]] || fail "queue missing without CLI"
 [[ ! -e "$WORK/plain-proj/.claude" ]] || fail "skill installed without Claude Code"
 grep -q "SKILL.md" "$WORK/out3" || fail "generic quick start doesn't point at SKILL.md"
 pass "install without a CLI"

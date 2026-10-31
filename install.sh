@@ -46,6 +46,11 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+if [[ ! -e "$PROJECT_ROOT/.claudesearch/experiment-queue.jsonl" ]]; then
+    cp "$SCRIPT_DIR/templates/experiment-queue.jsonl" "$PROJECT_ROOT/.claudesearch/experiment-queue.jsonl"
+    echo "Created: experiment-queue.jsonl"
+fi
+
 # Copy skill for Claude Code
 if [[ "$CLI" == "claude" ]]; then
     mkdir -p "$PROJECT_ROOT/.claude/skills/autoresearch"
@@ -70,5 +75,5 @@ else
     echo "  3. Check .claudesearch/prompt-results.jsonl for logged improvements"
 fi
 echo ""
-echo "Docs: README.md"
-echo "Philosophy: docs/philosophy.md"
+echo "Docs: $SCRIPT_DIR/README.md"
+echo "Philosophy: $SCRIPT_DIR/docs/philosophy.md"

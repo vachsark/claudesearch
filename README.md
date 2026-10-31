@@ -41,8 +41,9 @@ claude    # then type: /autoresearch
 **Codex or Gemini CLI:** they read `AGENTS.md` or `GEMINI.md` at your project root, so append the skill there. The `awk` skips the YAML frontmatter, which only Claude Code uses.
 
 ```bash
-awk 'f; /^---$/ && ++n==2 {f=1}' claudesearch/.claude/skills/autoresearch/SKILL.md >> your-project/AGENTS.md   # Codex
-awk 'f; /^---$/ && ++n==2 {f=1}' claudesearch/.claude/skills/autoresearch/SKILL.md >> your-project/GEMINI.md   # Gemini
+# from your project's root, as in the quick start
+awk 'f; /^---$/ && ++n==2 {f=1}' /path/to/claudesearch/.claude/skills/autoresearch/SKILL.md >> AGENTS.md   # Codex
+awk 'f; /^---$/ && ++n==2 {f=1}' /path/to/claudesearch/.claude/skills/autoresearch/SKILL.md >> GEMINI.md   # Gemini
 codex "run one ClaudeSearch improvement cycle on this project"
 ```
 

@@ -10,8 +10,12 @@ A small newsletter pipeline (`fixture/`) with three scheduled tasks. `digest.sh`
 - **report:** the cycle's report is saved in `.claudesearch/reports/`
 - **queue:** the digest experiment is closed and the publish one is still open
 
+The fix check compares the digest with the 7 notes line by line and fails if the cycle touched `config.env`, `data/`, `tests/`, `publish.sh` or `summary.sh`. A run where nothing passes scores 0.
+
 ```bash
 for i in 1 2 3; do bash bench/run.sh run-$i & done; wait; cat bench/results.txt
 ```
 
-Needs Claude Code signed in. Each run costs one cycle of model usage. `runs/` and `results.txt` are git-ignored.
+Needs Claude Code signed in. Each run costs one cycle of model usage.
+
+The child run is sandboxed: its shell commands run in Claude Code's OS sandbox (on Linux this needs `bubblewrap` and `socat`), so they can write only inside `runs/<label>` and Claude's temp folder and have no network. Its file tools are scoped to that folder, and it gets no MCP servers or web tools. It can still read files elsewhere on the machine, so don't run the benchmark where that matters. Labels may only use letters, digits, `.`, `_` and `-`. `grade.sh` runs the cycle's `digest.sh`, so only grade folders that `run.sh` made. `runs/` and `results.txt` are git-ignored.
